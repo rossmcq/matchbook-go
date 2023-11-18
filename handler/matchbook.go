@@ -34,3 +34,21 @@ func loadMatchboookToken() string {
 
 	return json_body["session-token"]
 }
+
+func logoutMatchbook(token *string) string {
+	url := "https://api.matchbook.com/bpapi/rest/security/session"
+
+	req, _ := http.NewRequest("DELETE", url, nil)
+
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("User-Agent", "api-doc-test-client")
+	req.Header.Add("session-token", *token)
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+
+	return string(body)
+
+}
