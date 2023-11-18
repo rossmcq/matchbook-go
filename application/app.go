@@ -27,6 +27,7 @@ func (a *App) Start(ctx context.Context) error {
 
 	fmt.Println("Starting server")
 
+	// connect to psql
 	// TODO Graceful shutdown of psql connection
 	ch := make(chan error, 1)
 

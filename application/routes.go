@@ -22,8 +22,9 @@ func loadRoutes() *chi.Mux {
 }
 
 func loadOrderRoutes(router chi.Router) {
-	orderHandler := &handler.Order{}
-	router.Get("/login", orderHandler.Login)
-	router.Post("/logout", orderHandler.Logout)
-	router.Post("/event/{id}", orderHandler.CreateEvent)
+	sessionHandler := &handler.Session{}
+	router.Get("/login", sessionHandler.Login)
+	router.Get("/token", sessionHandler.GetToken)
+	router.Post("/logout", sessionHandler.Logout)
+	router.Post("/event/{id}", sessionHandler.CreateEvent)
 }
