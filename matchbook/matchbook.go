@@ -1,4 +1,4 @@
-package handler
+package matchbook
 
 import (
 	"encoding/json"
@@ -9,7 +9,8 @@ import (
 	"strings"
 )
 
-func loadMatchboookToken() (string, error) {
+func LoadMatchboookToken() (string, error) {
+	// TODO: If session active
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
 	username := os.Getenv("MATCHBOOK_USER")
 	password := os.Getenv("MATCHBOOK_PW")
@@ -34,7 +35,7 @@ func loadMatchboookToken() (string, error) {
 	return json_body["session-token"], nil
 }
 
-func logoutMatchbook(token *string) string {
+func LogoutMatchbook(token *string) string {
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
 
 	req, _ := http.NewRequest("DELETE", url, nil)
@@ -51,7 +52,7 @@ func logoutMatchbook(token *string) string {
 
 }
 
-func getMatchOddsMarketId(eventId string) (float64, string, error) {
+func GetMatchOddsMarketId(eventId string) (float64, string, error) {
 	get_event_url := "https://api.matchbook.com/edge/rest/events/" + eventId
 	fmt.Println("url: ", get_event_url)
 	req, _ := http.NewRequest("GET", get_event_url, nil)
