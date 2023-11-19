@@ -26,5 +26,6 @@ func loadOrderRoutes(router chi.Router) {
 	router.Get("/login", sessionHandler.Login)
 	router.Get("/token", sessionHandler.GetToken)
 	router.Post("/logout", sessionHandler.Logout)
+	router.Get("/health", sessionHandler.Health)
 	router.Post("/event/{id}", sessionHandler.CreateEvent)
 }
