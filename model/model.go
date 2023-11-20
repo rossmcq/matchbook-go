@@ -1,10 +1,8 @@
 package model
 
-import "github.com/google/uuid"
-
 type Game struct {
-	GameID      uint64
-	EventID     uuid.UUID
-	MarketID    uuid.UUID
-	Description string
+	GameID      uint64 `json:"id"`
+	EventID     string `json:"event_id"`
+	MarketID    string `json:"market_id"`
+	Description string `json:"description"`
 }

@@ -64,6 +64,7 @@ func GetMatchOddsMarketId(eventId string) (float64, string, error) {
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
+	// TODO Refactor this mess and pass into a struct
 	var json_body interface{}
 	err := json.Unmarshal(body, &json_body)
 	if err != nil {

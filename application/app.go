@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 type App struct {
@@ -25,6 +27,11 @@ func (a *App) Start(ctx context.Context) error {
 		Handler: a.router,
 	}
 
+	err := postgres.CheckConnection()
+	if err != nil {
+		return fmt.Errorf("Can't connect to DB: %v", err)
+	}
+
 	fmt.Println("Starting server")
 
 	// connect to psql
@@ -32,7 +39,7 @@ func (a *App) Start(ctx context.Context) error {
 	ch := make(chan error, 1)
 
 	go func() {
-		err := server.ListenAndServe()
+		err = server.ListenAndServe()
 		if err != nil {
 			ch <- fmt.Errorf("failed to listen to server %w", err)
 		}
