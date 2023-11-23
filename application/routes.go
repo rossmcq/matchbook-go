@@ -10,6 +10,7 @@ import (
 	"github.com/rossmcq/matchbook-go/handler"
 	"github.com/rossmcq/matchbook-go/matchbook"
 	"github.com/rossmcq/matchbook-go/postgres"
+
 )
 
 func (a *App) loadRoutes() {
@@ -30,12 +31,14 @@ func (a *App) loadRoutes() {
 	a.router = router
 }
 
+
 func (a *App) loadOrderRoutes(router chi.Router) {
 	sessionHandler := &handler.Session{
 		SessionToken: &a.matchbookToken,
 		DbConnection: &postgres.DbConnection{
 			Database: a.dbConnection,
 		},
+
 	}
 	router.Get("/login", sessionHandler.Login)
 	router.Get("/token", sessionHandler.GetToken)

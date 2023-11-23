@@ -14,9 +14,11 @@ type DbConnection struct {
 	Database *sql.DB
 }
 
+
 func (d *DbConnection) CheckConnection() error {
 	// check db
 	err := d.Database.Ping()
+
 	if err != nil {
 		return fmt.Errorf("Error with db.Ping: %v", err)
 	}
@@ -49,6 +51,7 @@ func (d DbConnection) InsertOrReturnGameID(ctx context.Context, game model.Game)
 	if err != nil {
 		return fmt.Errorf("Error with db.Exec: %v", err)
 	}
+
 
 	fmt.Printf("GAME INSERTED: %v \n", gameID)
 

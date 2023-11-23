@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 type App struct {
@@ -48,6 +50,7 @@ func (a *App) Start(ctx context.Context) error {
 			fmt.Println("failed to close dB", err)
 		}
 	}()
+
 
 	fmt.Println("Starting server")
 
