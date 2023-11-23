@@ -10,12 +10,15 @@ import (
 )
 
 func main() {
-	app := application.New()
+	app, err := application.New()
+	if err != nil {
+		fmt.Println("failed initiating app %w", err)
+	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	err := app.Start(ctx)
+	err = app.Start(ctx)
 	if err != nil {
 		fmt.Println("failed to listen to server %w", err)
 	}

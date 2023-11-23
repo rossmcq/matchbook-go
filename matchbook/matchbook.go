@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func LoadMatchboookToken() (string, error) {
+func LoadMatchboookToken() (*string, error) {
 	// TODO: If session active
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
 	username := os.Getenv("MATCHBOOK_USER")
@@ -26,13 +26,15 @@ func LoadMatchboookToken() (string, error) {
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed io.ReadAll  %w", err)
+		var x *string
+		return x, fmt.Errorf("failed io.ReadAll  %w", err)
 
 	}
 	var json_body map[string]string
 	json.Unmarshal(body, &json_body)
+	sessionToken := json_body["session-token"]
 
-	return json_body["session-token"], nil
+	return &sessionToken, nil
 }
 
 func LogoutMatchbook(token *string) string {

@@ -14,7 +14,8 @@ import (
 )
 
 type Session struct {
-	SessionToken string
+	SessionToken *string
+	DbConnection *postgres.DbConnection
 }
 
 func (s *Session) Login(w http.ResponseWriter, r *http.Request) {
@@ -22,16 +23,17 @@ func (s *Session) Login(w http.ResponseWriter, r *http.Request) {
 	s.SessionToken, err = matchbook.LoadMatchboookToken()
 	if err != nil {
 		fmt.Printf("Error loading token %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
-	fmt.Printf("Got session token %v", s.SessionToken)
+	fmt.Printf("Got session token %v", *s.SessionToken)
 }
 
 func (s *Session) GetToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Current session token %v", s.SessionToken)
+	fmt.Printf("Current session token %v", *s.SessionToken)
 }
 
 func (s *Session) Logout(w http.ResponseWriter, r *http.Request) {
-	response := matchbook.LogoutMatchbook(&s.SessionToken)
+	response := matchbook.LogoutMatchbook(s.SessionToken)
 	fmt.Printf("Logout of current session %v", response)
 }
 
@@ -55,7 +57,7 @@ func (s *Session) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("MarketId: %v Description: %v", game.MarketID, game.Description)
 
-	err = postgres.InsertOrReturnGameID(r.Context(), game)
+	err = s.DbConnection.InsertOrReturnGameID(r.Context(), game)
 	if err != nil {
 		fmt.Printf("Error from postgres.insert: %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -63,8 +65,9 @@ func (s *Session) CreateEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Session) Health(w http.ResponseWriter, r *http.Request) {
-	err := postgres.CheckConnection()
+	err := s.DbConnection.CheckConnection()
 	if err != nil {
 		fmt.Printf("Error connecting to DB: %v", err)
+		w.WriteHeader(http.StatusRequestTimeout)
 	}
 }

@@ -9,27 +9,33 @@ import (
 
 	"github.com/rossmcq/matchbook-go/handler"
 	"github.com/rossmcq/matchbook-go/matchbook"
+	"github.com/rossmcq/matchbook-go/postgres"
 )
 
-func loadRoutes() *chi.Mux {
+func (a *App) loadRoutes() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	router.Route("/v1", loadOrderRoutes)
-
-	return router
-}
-
-func loadOrderRoutes(router chi.Router) {
+	router.Route("/v1", a.loadOrderRoutes)
 	sessionToken, err := matchbook.LoadMatchboookToken()
 	if err != nil {
 		fmt.Printf("Error fetching Matchbook token: %v", err)
 	}
+
+	a.matchbookToken = *sessionToken
+
+	a.router = router
+}
+
+func (a *App) loadOrderRoutes(router chi.Router) {
 	sessionHandler := &handler.Session{
-		SessionToken: sessionToken,
+		SessionToken: &a.matchbookToken,
+		DbConnection: &postgres.DbConnection{
+			Database: a.dbConnection,
+		},
 	}
 	router.Get("/login", sessionHandler.Login)
 	router.Get("/token", sessionHandler.GetToken)
