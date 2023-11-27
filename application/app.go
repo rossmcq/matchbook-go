@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 type App struct {
