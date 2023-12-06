@@ -16,7 +16,6 @@ import (
 type Session struct {
 	SessionToken *string
 	DbConnection *postgres.DbConnection
-
 }
 
 func (s *Session) Login(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +33,11 @@ func (s *Session) GetToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Session) Logout(w http.ResponseWriter, r *http.Request) {
-	response := matchbook.LogoutMatchbook(s.SessionToken)
+	response, err := matchbook.LogoutMatchbook(s.SessionToken)
+	if err != nil {
+		fmt.Printf("logout error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
 	fmt.Printf("Logout of current session %v", response)
 }

@@ -38,6 +38,7 @@ func (a *App) Start(ctx context.Context) error {
 		Handler: a.router,
 	}
 
+	// connect to psql
 	err := a.dbConnection.Ping()
 	if err != nil {
 		return fmt.Errorf("Can't ping Db: %v", err)
@@ -52,8 +53,6 @@ func (a *App) Start(ctx context.Context) error {
 
 	fmt.Println("Starting server")
 
-	// connect to psql
-	// TODO Graceful shutdown of psql connection
 	ch := make(chan error, 1)
 
 	go func() {
