@@ -29,13 +29,16 @@ func LoadMatchboookToken() (*string, error) {
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		var x *string
-		return x, fmt.Errorf("failed io.ReadAll:  %w", err)
-
+		return nil, fmt.Errorf("failed io.ReadAll:  %w", err)
 	}
-	var json_body map[string]string
-	json.Unmarshal(body, &json_body)
-	sessionToken := json_body["session-token"]
+
+	var json_body map[string]interface{}
+	err = json.Unmarshal(body, &json_body)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to unmarshal matchbook token response: %s", err)
+	}
+
+	sessionToken := json_body["session-token"].(string)
 
 	return &sessionToken, nil
 }
@@ -86,7 +89,7 @@ func GetMatchOddsMarketId(eventId string) (float64, string, error) {
 
 	markets := m["markets"]
 	if markets == nil {
-		return -1, "", fmt.Errorf("Unable to unmarshal: %v", err)
+		return -1, "", fmt.Errorf("Unable to parse markets: %v", err)
 	}
 	v := markets.([]interface{})
 
