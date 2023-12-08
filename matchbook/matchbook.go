@@ -65,7 +65,6 @@ func LogoutMatchbook(token *string) (string, error) {
 
 func GetMatchOddsMarketId(eventId string) (float64, string, error) {
 	get_event_url := "https://api.matchbook.com/edge/rest/events/" + eventId
-	fmt.Println("url: ", get_event_url)
 	req, _ := http.NewRequest("GET", get_event_url, nil)
 
 	addHeaders(req)
@@ -96,7 +95,7 @@ func GetMatchOddsMarketId(eventId string) (float64, string, error) {
 	for i := 0; i < len(v); i++ {
 		x := v[i].(map[string]interface{})
 		if x["name"] == "Match Odds" {
-			return x["id"].(float64), m["name"].(string), nil
+			return x["id"].(float64), m["name"].(string) + " " + x["start"].(string), nil
 		}
 	}
 
