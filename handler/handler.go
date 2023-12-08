@@ -22,14 +22,14 @@ func (s *Session) Login(w http.ResponseWriter, r *http.Request) {
 	var err error
 	s.SessionToken, err = matchbook.LoadMatchboookToken()
 	if err != nil {
-		fmt.Printf("Error loading token %v", err)
+		fmt.Printf("Error loading token %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	fmt.Printf("Got session token %v", *s.SessionToken)
+	fmt.Printf("Got session token %v \n", *s.SessionToken)
 }
 
 func (s *Session) GetToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Current session token %v", *s.SessionToken)
+	fmt.Printf("Current session token %v \n", *s.SessionToken)
 }
 
 func (s *Session) Logout(w http.ResponseWriter, r *http.Request) {
@@ -39,17 +39,17 @@ func (s *Session) Logout(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	fmt.Printf("Logout of current session %v", response)
+	fmt.Printf("Logout of current session %v \n", response)
 }
 
 func (s *Session) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 
-	fmt.Printf("Create event data for Id: %v", idParam)
+	fmt.Printf("Create event data for Id: %v \n", idParam)
 
 	marketID, description, err := matchbook.GetMatchOddsMarketId(idParam)
 	if err != nil {
-		fmt.Printf("Error getting market id %v", err)
+		fmt.Printf("Error getting market id %v \n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -60,7 +60,7 @@ func (s *Session) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		MarketID:    marketIDStr,
 		Description: description}
 
-	fmt.Printf("MarketId: %v Description: %v", game.MarketID, game.Description)
+	fmt.Printf("MarketId: %v Description: %v \n", game.MarketID, game.Description)
 
 	err = s.DbConnection.InsertOrReturnGameID(r.Context(), game)
 
@@ -74,7 +74,7 @@ func (s *Session) Health(w http.ResponseWriter, r *http.Request) {
 	err := s.DbConnection.CheckConnection()
 
 	if err != nil {
-		fmt.Printf("Error connecting to DB: %v", err)
+		fmt.Printf("Error connecting to DB: %v \n", err)
 		w.WriteHeader(http.StatusRequestTimeout)
 	}
 }

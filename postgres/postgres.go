@@ -14,7 +14,6 @@ type DbConnection struct {
 	Database *sql.DB
 }
 
-
 func (d *DbConnection) CheckConnection() error {
 	// check db
 	err := d.Database.Ping()
@@ -38,7 +37,7 @@ func (d DbConnection) InsertOrReturnGameID(ctx context.Context, game model.Game)
 	row := d.Database.QueryRow(selectStmt, game.EventID, game.MarketID)
 
 	err := row.Scan(&gameID)
-	fmt.Printf("Return GameID, row:%v: \n", gameID)
+	fmt.Printf("Return GameID, row: %v: \n", gameID)
 	if gameID != "" {
 		fmt.Printf("gameID!=nilish: \n")
 
@@ -51,7 +50,6 @@ func (d DbConnection) InsertOrReturnGameID(ctx context.Context, game model.Game)
 	if err != nil {
 		return fmt.Errorf("Error with db.Exec: %v", err)
 	}
-
 
 	fmt.Printf("GAME INSERTED: %v \n", gameID)
 
