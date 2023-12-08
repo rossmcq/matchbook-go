@@ -9,10 +9,9 @@ import (
 )
 
 type App struct {
-	router         http.Handler
-	dbConnection   *sql.DB
-	matchbookToken string
-	config         Config
+	router       http.Handler
+	dbConnection *sql.DB
+	config       Config
 }
 
 func New() (*App, error) {
@@ -49,7 +48,6 @@ func (a *App) Start(ctx context.Context) error {
 			fmt.Println("failed to close dB", err)
 		}
 	}()
-
 
 	fmt.Println("Starting server")
 

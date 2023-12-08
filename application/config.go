@@ -3,10 +3,13 @@ package application
 import (
 	"fmt"
 	"os"
+
+	"github.com/rossmcq/matchbook-go/matchbook"
 )
 
 type Config struct {
 	dbConnectionString string
+	matchbookToken     string
 }
 
 type dbConfig struct {
@@ -36,5 +39,11 @@ func LoadConfig() Config {
 
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", dbCfg.host, dbCfg.port, dbCfg.user, dbCfg.password, dbCfg.dbname)
 
-	return Config{dbConnectionString: psqlconn}
+	matchbookToken, err := matchbook.LoadMatchboookToken()
+	if err != nil {
+		fmt.Printf("Error loading matchbook token %s", err)
+	}
+	return Config{
+		dbConnectionString: psqlconn,
+		matchbookToken:     *matchbookToken}
 }
