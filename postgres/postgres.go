@@ -37,7 +37,7 @@ func (d DbConnection) InsertOrReturnGameID(ctx context.Context, game model.Game)
 	row := d.Database.QueryRow(selectStmt, game.EventID, game.MarketID)
 
 	err := row.Scan(&gameID)
-	fmt.Printf("Return GameID, row: %v: \n", gameID)
+	fmt.Printf("Returned GameID from DB: %v: \n", gameID)
 	if gameID != "" {
 		fmt.Printf("gameID!=nilish: \n")
 
@@ -46,7 +46,7 @@ func (d DbConnection) InsertOrReturnGameID(ctx context.Context, game model.Game)
 
 	insertDynStmt := `INSERT INTO football.games (id, event_id, market_id, description)
 						VALUES ($1,$2,$3,$4);`
-	_, err = d.Database.Exec(insertDynStmt, string(game.GameID), game.EventID, game.MarketID, game.Description)
+	_, err = d.Database.Exec(insertDynStmt, fmt.Sprint(game.GameID), game.EventID, game.MarketID, game.Description)
 	if err != nil {
 		return fmt.Errorf("Error with db.Exec: %v", err)
 	}
