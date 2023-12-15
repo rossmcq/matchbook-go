@@ -9,6 +9,29 @@ import (
 	"strings"
 )
 
+type eventResponse struct {
+	Id               int64    `json:"id"`
+	Name             string   `json:"name"`
+	SportId          int      `json:"sport-id"`
+	Start            string   `json:"start"`
+	InRunningFlag    bool     `json:"in-running-flag"`
+	AllowLiveBetting bool     `json:"allow-live-betting"`
+	CategoryId       []int    `json:"catgory-id"`
+	Status           string   `json:"status"`
+	Volume           float32  `json:"volume"`
+	Markets          []market `json:"markets"`
+}
+
+type sessionResponse struct {
+	SessionToken string `json:"session-token"`
+}
+
+type market struct {
+	Live bool   `json:"live"`
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
 func LoadMatchboookToken() (*string, error) {
 	// TODO: If session active
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
@@ -32,13 +55,13 @@ func LoadMatchboookToken() (*string, error) {
 		return nil, fmt.Errorf("failed io.ReadAll:  %w", err)
 	}
 
-	var json_body map[string]interface{}
+	var json_body sessionResponse
 	err = json.Unmarshal(body, &json_body)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to unmarshal matchbook token response: %s", err)
 	}
 
-	sessionToken := json_body["session-token"].(string)
+	sessionToken := json_body.SessionToken
 
 	return &sessionToken, nil
 }
@@ -63,7 +86,7 @@ func LogoutMatchbook(token *string) (string, error) {
 
 }
 
-func GetMatchOddsMarketId(eventId string) (float64, string, error) {
+func GetMatchOddsMarketId(eventId string) (int64, string, error) {
 	get_event_url := "https://api.matchbook.com/edge/rest/events/" + eventId
 	req, _ := http.NewRequest("GET", get_event_url, nil)
 
@@ -77,25 +100,21 @@ func GetMatchOddsMarketId(eventId string) (float64, string, error) {
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
-	// TODO Refactor this mess and pass into a struct
-	var json_body interface{}
+	var json_body eventResponse
 	err = json.Unmarshal(body, &json_body)
 	if err != nil {
 		return -1, "", fmt.Errorf("Unable to unmarshal: %v", err)
 	}
 
-	m := json_body.(map[string]interface{})
-
-	markets := m["markets"]
+	markets := json_body.Markets
 	if markets == nil {
 		return -1, "", fmt.Errorf("Unable to parse markets: %v", err)
 	}
-	v := markets.([]interface{})
 
-	for i := 0; i < len(v); i++ {
-		x := v[i].(map[string]interface{})
-		if x["name"] == "Match Odds" {
-			return x["id"].(float64), m["name"].(string) + " " + x["start"].(string), nil
+	for i := 0; i < len(markets); i++ {
+		market := markets[i]
+		if market.Name == "Match Odds" {
+			return market.Id, json_body.Name + " " + json_body.Start, nil
 		}
 	}
 

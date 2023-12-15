@@ -53,7 +53,7 @@ func (s *Session) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	marketIDStr := strconv.FormatFloat(marketID, 'f', -1, 64)
+	marketIDStr := strconv.FormatInt(marketID, 10)
 	game := model.Game{
 		GameID:      rand.Uint64(),
 		EventID:     idParam,
