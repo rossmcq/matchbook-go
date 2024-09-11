@@ -2,29 +2,24 @@ package application
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 type App struct {
 	router       http.Handler
-	dbConnection *sql.DB
+	dbConnection postgres.DbConnection
 	config       Config
 }
 
-func New() (*App, error) {
+func New(dbConnection postgres.DbConnection) (*App, error) {
 	app := &App{
-		config: LoadConfig(),
+		config:       LoadConfig(),
+		dbConnection: dbConnection,
 	}
-
-	dbConnection, err := sql.Open("postgres", app.config.dbConnectionString)
-	if err != nil {
-		return &App{}, fmt.Errorf("Can't open DB: %v", err)
-	}
-
-	app.dbConnection = dbConnection
 
 	app.loadRoutes()
 
@@ -37,14 +32,14 @@ func (a *App) Start(ctx context.Context) error {
 		Handler: a.router,
 	}
 
-	// connect to psql
-	err := a.dbConnection.Ping()
+	// Test connection to psql
+	err := a.dbConnection.Database.Ping()
 	if err != nil {
-		return fmt.Errorf("Can't ping Db: %v", err)
+		return fmt.Errorf("can't ping Db: %v", err)
 	}
 
 	defer func() {
-		if err := a.dbConnection.Close(); err != nil {
+		if err := a.dbConnection.Database.Close(); err != nil {
 			fmt.Println("failed to close dB", err)
 		}
 	}()

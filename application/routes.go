@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/rossmcq/matchbook-go/handler"
-	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 func (a *App) loadRoutes() {
@@ -25,9 +24,7 @@ func (a *App) loadRoutes() {
 func (a *App) loadOrderRoutes(router chi.Router) {
 	sessionHandler := &handler.Session{
 		SessionToken: &a.config.matchbookToken,
-		DbConnection: &postgres.DbConnection{
-			Database: a.dbConnection,
-		},
+		DbConnection: &a.dbConnection,
 	}
 	router.Get("/login", sessionHandler.Login)
 	router.Get("/token", sessionHandler.GetToken)
