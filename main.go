@@ -3,14 +3,27 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 
 	"github.com/rossmcq/matchbook-go/application"
+	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 func main() {
-	app, err := application.New()
+	//init db
+	dbConnection, err := postgres.New()
+	if err != nil {
+		log.Fatalf("unable to create db connection: %e", err)
+	}
+
+	//init matchbook connection
+
+	//init handlers
+
+	//init app passing in dependancies
+	app, err := application.New(dbConnection)
 	if err != nil {
 		fmt.Println("failed initiating app %w", err)
 	}
