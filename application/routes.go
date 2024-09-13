@@ -23,7 +23,7 @@ func (a *App) loadRoutes() {
 
 func (a *App) loadOrderRoutes(router chi.Router) {
 	sessionHandler := &handler.Session{
-		SessionToken: &a.config.matchbookToken,
+		SessionToken: a.matchbookToken,
 		DbConnection: &a.dbConnection,
 	}
 	router.Get("/login", sessionHandler.Login)

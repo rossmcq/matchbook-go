@@ -14,26 +14,26 @@ import (
 )
 
 type Session struct {
-	SessionToken *string
+	SessionToken string
 	DbConnection *postgres.DbConnection
 }
 
 func (s *Session) Login(w http.ResponseWriter, r *http.Request) {
 	var err error
-	s.SessionToken, err = matchbook.LoadMatchboookToken()
+	s.SessionToken, err = matchbook.New()
 	if err != nil {
 		fmt.Printf("Error loading token %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	fmt.Printf("Got session token %v \n", *s.SessionToken)
+	fmt.Printf("Got session token %v \n", s.SessionToken)
 }
 
 func (s *Session) GetToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Current session token %v \n", *s.SessionToken)
+	fmt.Printf("Current session token %v \n", s.SessionToken)
 }
 
 func (s *Session) Logout(w http.ResponseWriter, r *http.Request) {
-	response, err := matchbook.LogoutMatchbook(s.SessionToken)
+	response, err := matchbook.LogoutMatchbook(&s.SessionToken)
 	if err != nil {
 		fmt.Printf("logout error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)

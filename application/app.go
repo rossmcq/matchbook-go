@@ -10,15 +10,15 @@ import (
 )
 
 type App struct {
-	router       http.Handler
-	dbConnection postgres.DbConnection
-	config       Config
+	router         http.Handler
+	dbConnection   postgres.DbConnection
+	matchbookToken string
 }
 
-func New(dbConnection postgres.DbConnection) (*App, error) {
+func New(dbConnection postgres.DbConnection, matchbookToken string) (*App, error) {
 	app := &App{
-		config:       LoadConfig(),
-		dbConnection: dbConnection,
+		matchbookToken: matchbookToken,
+		dbConnection:   dbConnection,
 	}
 
 	app.loadRoutes()

@@ -32,7 +32,7 @@ type market struct {
 	Name string `json:"name"`
 }
 
-func LoadMatchboookToken() (*string, error) {
+func New() (string, error) {
 	// TODO: If session active
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
 	username := os.Getenv("MATCHBOOK_USER")
@@ -46,24 +46,24 @@ func LoadMatchboookToken() (*string, error) {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed making http request: %w", err)
+		return "", fmt.Errorf("failed making http request: %w", err)
 	}
 
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed io.ReadAll:  %w", err)
+		return "", fmt.Errorf("failed io.ReadAll:  %w", err)
 	}
 
 	var json_body sessionResponse
 	err = json.Unmarshal(body, &json_body)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to unmarshal matchbook token response: %s", err)
+		return "", fmt.Errorf("unable to unmarshal matchbook token response: %s", err)
 	}
 
 	sessionToken := json_body.SessionToken
 
-	return &sessionToken, nil
+	return sessionToken, nil
 }
 
 func LogoutMatchbook(token *string) (string, error) {
@@ -103,12 +103,12 @@ func GetMatchOddsMarketId(eventId string) (int64, string, error) {
 	var json_body eventResponse
 	err = json.Unmarshal(body, &json_body)
 	if err != nil {
-		return -1, "", fmt.Errorf("Unable to unmarshal: %v", err)
+		return -1, "", fmt.Errorf("unable to unmarshal: %v", err)
 	}
 
 	markets := json_body.Markets
 	if markets == nil {
-		return -1, "", fmt.Errorf("Unable to parse markets: %v", err)
+		return -1, "", fmt.Errorf("unable to parse markets: %v", err)
 	}
 
 	for i := 0; i < len(markets); i++ {
@@ -118,7 +118,7 @@ func GetMatchOddsMarketId(eventId string) (int64, string, error) {
 		}
 	}
 
-	return -1, "", fmt.Errorf("No match odds found")
+	return -1, "", fmt.Errorf("no match odds found")
 
 }
 
