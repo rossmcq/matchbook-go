@@ -22,6 +22,10 @@ type eventResponse struct {
 	Markets          []market `json:"markets"`
 }
 
+type Client struct {
+	Token string
+}
+
 type sessionResponse struct {
 	SessionToken string `json:"session-token"`
 }
@@ -32,7 +36,7 @@ type market struct {
 	Name string `json:"name"`
 }
 
-func New() (string, error) {
+func New() (Client, error) {
 	// TODO: If session active
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
 	username := os.Getenv("MATCHBOOK_USER")
@@ -46,33 +50,33 @@ func New() (string, error) {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed making http request: %w", err)
+		return Client{}, fmt.Errorf("failed making http request: %w", err)
 	}
 
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed io.ReadAll:  %w", err)
+		return Client{}, fmt.Errorf("failed io.ReadAll:  %w", err)
 	}
 
 	var json_body sessionResponse
 	err = json.Unmarshal(body, &json_body)
 	if err != nil {
-		return "", fmt.Errorf("unable to unmarshal matchbook token response: %s", err)
+		return Client{}, fmt.Errorf("unable to unmarshal matchbook token response: %s", err)
 	}
 
 	sessionToken := json_body.SessionToken
 
-	return sessionToken, nil
+	return Client{Token: sessionToken}, nil
 }
 
-func LogoutMatchbook(token *string) (string, error) {
+func (c Client) LogoutMatchbook(token *string) (string, error) {
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
 
 	req, _ := http.NewRequest("DELETE", url, nil)
 	addHeaders(req)
 
-	req.Header.Add("session-token", *token)
+	req.Header.Add("session-token", c.Token)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -86,7 +90,7 @@ func LogoutMatchbook(token *string) (string, error) {
 
 }
 
-func GetMatchOddsMarketId(eventId string) (int64, string, error) {
+func (c Client) GetMatchOddsMarketId(eventId string) (int64, string, error) {
 	get_event_url := "https://api.matchbook.com/edge/rest/events/" + eventId
 	req, _ := http.NewRequest("GET", get_event_url, nil)
 

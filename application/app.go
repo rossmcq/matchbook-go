@@ -6,24 +6,51 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rossmcq/matchbook-go/handler"
+	"github.com/rossmcq/matchbook-go/matchbook"
 	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 type App struct {
-	router         http.Handler
-	dbConnection   postgres.DbConnection
-	matchbookToken string
+	router          http.Handler
+	dbConnection    postgres.DbConnection
+	matchbookClient matchbook.Client
+	handler         handler.Session
 }
 
-func New(dbConnection postgres.DbConnection, matchbookToken string) (*App, error) {
+func New(dbConnection postgres.DbConnection, matchbookClient matchbook.Client, handler handler.Session) (*App, error) {
 	app := &App{
-		matchbookToken: matchbookToken,
-		dbConnection:   dbConnection,
+		matchbookClient: matchbookClient,
+		dbConnection:    dbConnection,
+		handler:         handler,
 	}
 
 	app.loadRoutes()
 
 	return app, nil
+}
+
+func (a *App) loadRoutes() {
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	router.Route("/v1", a.loadOrderRoutes)
+
+	a.router = router
+}
+
+func (a *App) loadOrderRoutes(router chi.Router) {
+
+	router.Get("/login", a.handler.Login)
+	router.Get("/token", a.handler.GetToken)
+	router.Post("/logout", a.handler.Logout)
+	router.Get("/health", a.handler.Health)
+	router.Post("/event/{id}", a.handler.CreateEvent)
 }
 
 func (a *App) Start(ctx context.Context) error {
