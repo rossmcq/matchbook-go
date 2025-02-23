@@ -14,26 +14,33 @@ import (
 )
 
 type Session struct {
-	SessionToken string
-	DbConnection *postgres.DbConnection
+	matchbookClient matchbook.Client
+	DbConnection    *postgres.DbConnection
+}
+
+func New(m matchbook.Client, db *postgres.DbConnection) Session {
+	return Session{
+		matchbookClient: m,
+		DbConnection:    db,
+	}
 }
 
 func (s *Session) Login(w http.ResponseWriter, r *http.Request) {
 	var err error
-	s.SessionToken, err = matchbook.New()
+	s.matchbookClient, err = matchbook.New()
 	if err != nil {
 		fmt.Printf("Error loading token %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	fmt.Printf("Got session token %v \n", s.SessionToken)
+	fmt.Printf("Got session token %v \n", s.matchbookClient.Token)
 }
 
 func (s *Session) GetToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Current session token %v \n", s.SessionToken)
+	fmt.Printf("Current session token %v \n", s.matchbookClient.Token)
 }
 
 func (s *Session) Logout(w http.ResponseWriter, r *http.Request) {
-	response, err := matchbook.LogoutMatchbook(&s.SessionToken)
+	response, err := s.matchbookClient.LogoutMatchbook(&s.matchbookClient.Token)
 	if err != nil {
 		fmt.Printf("logout error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -47,7 +54,7 @@ func (s *Session) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Create event data for Id: %v \n", idParam)
 
-	marketID, description, err := matchbook.GetMatchOddsMarketId(idParam)
+	marketID, description, err := s.matchbookClient.GetMatchOddsMarketId(idParam)
 	if err != nil {
 		fmt.Printf("Error getting market id %v \n", err)
 		w.WriteHeader(http.StatusBadRequest)
