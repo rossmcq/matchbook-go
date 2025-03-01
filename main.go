@@ -7,10 +7,11 @@ import (
 	"os"
 	"os/signal"
 
+	matchbook "github.com/rossmcq/matchbook-go/adapter"
 	"github.com/rossmcq/matchbook-go/application"
 	"github.com/rossmcq/matchbook-go/handler"
-	"github.com/rossmcq/matchbook-go/matchbook"
 	"github.com/rossmcq/matchbook-go/postgres"
+	"github.com/rossmcq/matchbook-go/service"
 )
 
 func main() {
@@ -24,7 +25,9 @@ func main() {
 		log.Fatalf("unable to fetch matchbook token: %e", err)
 	}
 
-	handler := handler.New(matchbookClient, &dbConnection)
+	service := service.New(matchbookClient, &dbConnection)
+
+	handler := handler.New(service)
 	// Check error
 
 	//init app passing in dependancies

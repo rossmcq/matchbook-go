@@ -87,7 +87,6 @@ func (c Client) LogoutMatchbook(token *string) (string, error) {
 	body, _ := io.ReadAll(res.Body)
 
 	return string(body), nil
-
 }
 
 func (c Client) GetMatchOddsMarketId(eventId string) (int64, string, error) {
