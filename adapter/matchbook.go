@@ -7,20 +7,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
-)
 
-type eventResponse struct {
-	Id               int64    `json:"id"`
-	Name             string   `json:"name"`
-	SportId          int      `json:"sport-id"`
-	Start            string   `json:"start"`
-	InRunningFlag    bool     `json:"in-running-flag"`
-	AllowLiveBetting bool     `json:"allow-live-betting"`
-	CategoryId       []int    `json:"catgory-id"`
-	Status           string   `json:"status"`
-	Volume           float32  `json:"volume"`
-	Markets          []market `json:"markets"`
-}
+	"github.com/rossmcq/matchbook-go/model"
+)
 
 type Client struct {
 	Token string
@@ -28,12 +17,6 @@ type Client struct {
 
 type sessionResponse struct {
 	SessionToken string `json:"session-token"`
-}
-
-type market struct {
-	Live bool   `json:"live"`
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
 }
 
 func New() (Client, error) {
@@ -59,18 +42,18 @@ func New() (Client, error) {
 		return Client{}, fmt.Errorf("failed io.ReadAll:  %w", err)
 	}
 
-	var json_body sessionResponse
-	err = json.Unmarshal(body, &json_body)
+	var sessionResponse sessionResponse
+	err = json.Unmarshal(body, &sessionResponse)
 	if err != nil {
 		return Client{}, fmt.Errorf("unable to unmarshal matchbook token response: %s", err)
 	}
 
-	sessionToken := json_body.SessionToken
+	sessionToken := sessionResponse.SessionToken
 
 	return Client{Token: sessionToken}, nil
 }
 
-func (c Client) LogoutMatchbook(token *string) (string, error) {
+func (c Client) LogoutMatchbook() (string, error) {
 	url := "https://api.matchbook.com/bpapi/rest/security/session"
 
 	req, _ := http.NewRequest("DELETE", url, nil)
@@ -89,43 +72,34 @@ func (c Client) LogoutMatchbook(token *string) (string, error) {
 	return string(body), nil
 }
 
-func (c Client) GetMatchOddsMarketId(eventId string) (int64, string, error) {
-	get_event_url := "https://api.matchbook.com/edge/rest/events/" + eventId
-	req, _ := http.NewRequest("GET", get_event_url, nil)
+func (c Client) GetEvent(eventId string) (model.EventResponse, error) {
+	getEventURL := "https://api.matchbook.com/edge/rest/events/" + eventId
+	req, _ := http.NewRequest("GET", getEventURL, nil)
 
 	addHeaders(req)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return 0, "", fmt.Errorf("failed making http request: %w", err)
+		return model.EventResponse{}, fmt.Errorf("failed making http request: %w", err)
 	}
 
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
-	var json_body eventResponse
-	err = json.Unmarshal(body, &json_body)
+	var eventResponse model.EventResponse
+	err = json.Unmarshal(body, &eventResponse)
 	if err != nil {
-		return -1, "", fmt.Errorf("unable to unmarshal: %v", err)
+		return eventResponse, fmt.Errorf("unable to unmarshal: %v", err)
 	}
 
-	markets := json_body.Markets
-	if markets == nil {
-		return -1, "", fmt.Errorf("unable to parse markets: %v", err)
-	}
-
-	for i := 0; i < len(markets); i++ {
-		market := markets[i]
-		if market.Name == "Match Odds" {
-			return market.Id, json_body.Name + " " + json_body.Start, nil
-		}
-	}
-
-	return -1, "", fmt.Errorf("no match odds found")
-
+	return eventResponse, nil
 }
 
 func addHeaders(req *http.Request) {
 	req.Header.Add("accept", "application/json")
 	req.Header.Add("User-Agent", "api-doc-test-client")
+}
+
+func (c Client) GetMatchbookToken() string {
+	return c.Token
 }

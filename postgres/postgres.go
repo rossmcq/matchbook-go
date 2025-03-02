@@ -52,7 +52,7 @@ func New() (DbConnection, error) {
 	}, nil
 }
 
-func (d *DbConnection) CheckConnection() error {
+func (d DbConnection) CheckConnection() error {
 	// check db
 	err := d.Database.Ping()
 
@@ -65,7 +65,7 @@ func (d *DbConnection) CheckConnection() error {
 	return nil
 }
 
-func (d DbConnection) InsertOrReturnGameID(ctx context.Context, game model.Game) error {
+func (d DbConnection) CreateGame(ctx context.Context, game model.Game) error {
 	var gameID string
 
 	selectStmt := `SELECT id FROM football.games 
@@ -76,7 +76,9 @@ func (d DbConnection) InsertOrReturnGameID(ctx context.Context, game model.Game)
 
 	err := row.Scan(&gameID)
 	if err != nil {
-		return fmt.Errorf("error scanning gameID: %s", err)
+		if err != sql.ErrNoRows {
+			return fmt.Errorf("error scanning gameID: %s", err)
+		}
 	}
 	fmt.Printf("returned GameID from DB: %v: \n", gameID)
 	if gameID != "" {
