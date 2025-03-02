@@ -1,3 +1,6 @@
+//go:generate mockgen -destination=./mocks/mock_matchbook.go -package=mocks github.com/rossmcq/matchbook-go/service MatchbookClient
+//go:generate mockgen -destination=./mocks/mock_postgres.go -package=mocks github.com/rossmcq/matchbook-go/service DbConnection
+
 package service
 
 import (
@@ -8,17 +11,26 @@ import (
 
 	uuid "github.com/kevinburke/go.uuid"
 
-	matchbook "github.com/rossmcq/matchbook-go/adapter"
 	"github.com/rossmcq/matchbook-go/model"
-	"github.com/rossmcq/matchbook-go/postgres"
 )
 
 type Service struct {
-	MatchbookClient matchbook.Client
-	DbConnection    *postgres.DbConnection
+	MatchbookClient MatchbookClient
+	DbConnection    DbConnection
 }
 
-func New(matchbookClient matchbook.Client, dbConnection *postgres.DbConnection) Service {
+type MatchbookClient interface {
+	GetEvent(eventId string) (model.EventResponse, error)
+	LogoutMatchbook() (string, error)
+	GetMatchbookToken() string
+}
+
+type DbConnection interface {
+	CreateGame(ctx context.Context, game model.Game) error
+	CheckConnection() error
+}
+
+func New(matchbookClient MatchbookClient, dbConnection DbConnection) Service {
 	return Service{
 		MatchbookClient: matchbookClient,
 		DbConnection:    dbConnection,
@@ -26,10 +38,30 @@ func New(matchbookClient matchbook.Client, dbConnection *postgres.DbConnection) 
 }
 
 func (s Service) CreateEvent(id string) error {
-	marketID, description, err := s.MatchbookClient.GetMatchOddsMarketId(id)
+	event, err := s.MatchbookClient.GetEvent(id)
 	if err != nil {
 		return errors.New("error getting market id")
 	}
+
+	// Find the Match Odds market for the event
+	markets := event.Markets
+	if markets == nil {
+		return fmt.Errorf("no markets found for event %s", id)
+	}
+	marketID := int64(0)
+	var description string
+	for i := 0; i < len(markets); i++ {
+		market := markets[i]
+		if market.Name == "Match Odds" {
+			marketID = market.Id
+			description = event.Name + " " + event.Start
+		}
+	}
+
+	if marketID == 0 {
+		return errors.New("no match odds found")
+	}
+
 	marketIDStr := strconv.FormatInt(marketID, 10)
 	game := model.Game{
 		GameID:      uuid.NewV4(),
@@ -39,7 +71,7 @@ func (s Service) CreateEvent(id string) error {
 
 	fmt.Printf("marketId: %v, description: %v \n", game.MarketID, game.Description)
 
-	err = s.DbConnection.InsertOrReturnGameID(context.TODO(), game)
+	err = s.DbConnection.CreateGame(context.TODO(), game)
 	if err != nil {
 		return errors.Join(errors.New("error inserting into postgres"), err)
 	}
@@ -47,7 +79,7 @@ func (s Service) CreateEvent(id string) error {
 }
 
 func (s Service) LogoutMatchbook() error {
-	response, err := s.MatchbookClient.LogoutMatchbook(&s.MatchbookClient.Token)
+	response, err := s.MatchbookClient.LogoutMatchbook()
 	if err != nil {
 		return errors.Join(errors.New("logout error"), err)
 	}
@@ -62,4 +94,8 @@ func (s Service) Health() error {
 		return errors.Join(errors.New("error connecting to db"), err)
 	}
 	return nil
+}
+
+func (s Service) GetMatchbookToken() string {
+	return s.MatchbookClient.GetMatchbookToken()
 }

@@ -27,11 +27,11 @@ func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Error loading token %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	fmt.Printf("Got session token %v \n", h.service.MatchbookClient.Token)
+	fmt.Printf("Got session token %v \n", h.service.GetMatchbookToken())
 }
 
 func (h Handler) GetToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Current session token %v \n", h.service.MatchbookClient.Token)
+	fmt.Printf("Current session token %v \n", h.service.GetMatchbookToken())
 }
 
 func (h Handler) Logout(w http.ResponseWriter, r *http.Request) {

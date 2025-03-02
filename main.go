@@ -12,6 +12,8 @@ import (
 	"github.com/rossmcq/matchbook-go/handler"
 	"github.com/rossmcq/matchbook-go/postgres"
 	"github.com/rossmcq/matchbook-go/service"
+
+	_ "github.com/golang/mock/mockgen/model"
 )
 
 func main() {

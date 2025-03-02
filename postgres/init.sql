@@ -7,3 +7,5 @@ CREATE TABLE football.games (
 	event_id VARCHAR ( 20 ) NOT NULL,
 	market_id VARCHAR (40) NOT NULL,
 	description VARCHAR (90) ) ;
+
+GRANT ALL ON TABLE football.games  TO matchbook_user;
