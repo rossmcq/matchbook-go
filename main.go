@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -25,17 +24,22 @@ func main() {
 	matchbookClient, err := matchbook.New()
 	if err != nil {
 		log.Fatalf("unable to fetch matchbook token: %e", err)
+
 	}
 
-	service := service.New(matchbookClient, &dbConnection)
+	service, err := service.New(matchbookClient, &dbConnection)
+	if err != nil {
+		log.Fatalf("unable to create service: %e", err)
+	}
 
-	handler := handler.New(service)
-	// Check error
+	handler, err := handler.New(service)
+	if err != nil {
+		log.Fatalf("unable to create handler: %e", err)
+	}
 
-	//init app passing in dependancies
 	app, err := application.New(dbConnection, matchbookClient, handler)
 	if err != nil {
-		fmt.Println("failed initiating app %w", err)
+		log.Fatalf("failed initiating app %e", err)
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -43,6 +47,6 @@ func main() {
 
 	err = app.Start(ctx)
 	if err != nil {
-		fmt.Println("failed to listen to server %w", err)
+		log.Fatalf("failed to listen to server %e", err)
 	}
 }

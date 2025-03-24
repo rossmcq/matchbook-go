@@ -14,10 +14,18 @@ type Handler struct {
 	service service.Service
 }
 
-func New(s service.Service) Handler {
+// TODO refactor login so Matchbook client is set in service layer
+// type Service interface {
+// 	GetMatchbookToken() string
+// 	LogoutMatchbook() error
+// 	CreateEvent(id string) error
+// 	Health() error
+// }
+
+func New(s service.Service) (Handler, error) {
 	return Handler{
 		service: s,
-	}
+	}, nil
 }
 
 func (h Handler) Login(w http.ResponseWriter, r *http.Request) {

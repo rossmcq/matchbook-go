@@ -7,9 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
-
-	uuid "github.com/kevinburke/go.uuid"
 
 	"github.com/rossmcq/matchbook-go/model"
 )
@@ -30,11 +27,19 @@ type DbConnection interface {
 	CheckConnection() error
 }
 
-func New(matchbookClient MatchbookClient, dbConnection DbConnection) Service {
+func New(matchbookClient MatchbookClient, dbConnection DbConnection) (Service, error) {
+	if matchbookClient == nil {
+		return Service{}, errors.New("matchbook client is nil")
+	}
+
+	if dbConnection == nil {
+		return Service{}, errors.New("database client is nil")
+	}
+
 	return Service{
 		MatchbookClient: matchbookClient,
 		DbConnection:    dbConnection,
-	}
+	}, nil
 }
 
 func (s Service) CreateEvent(id string) error {
@@ -54,6 +59,7 @@ func (s Service) CreateEvent(id string) error {
 		market := markets[i]
 		if market.Name == "Match Odds" {
 			marketID = market.Id
+			// TODO split timestamp out from here
 			description = event.Name + " " + event.Start
 		}
 	}
@@ -62,12 +68,12 @@ func (s Service) CreateEvent(id string) error {
 		return errors.New("no match odds found")
 	}
 
-	marketIDStr := strconv.FormatInt(marketID, 10)
 	game := model.Game{
-		GameID:      uuid.NewV4(),
+		GameID:      id,
 		EventID:     id,
-		MarketID:    marketIDStr,
-		Description: description}
+		MarketID:    marketID,
+		Description: description,
+	}
 
 	fmt.Printf("marketId: %v, description: %v \n", game.MarketID, game.Description)
 
