@@ -1,13 +1,9 @@
 package model
 
-import (
-	uuid "github.com/kevinburke/go.uuid"
-)
-
 type Game struct {
-	GameID      uuid.UUID
+	GameID      string
 	EventID     string
-	MarketID    string
+	MarketID    int64
 	Description string
 }
 
