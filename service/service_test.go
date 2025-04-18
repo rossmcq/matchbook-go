@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -55,16 +56,22 @@ func TestService_CreateEvent_Sucess(t *testing.T) {
 	assert.NotNil(t, s)
 	assert.NoError(t, err)
 
-	matchbookClient.EXPECT().GetEvent("123").Return(model.EventResponse{
+	matchbookClient.EXPECT().GetEvent(eventID).Return(model.EventResponse{
 		Name:    description,
+		Start:   "2025-04-18T14:00:00.000Z",
+		Status:  "open",
 		Markets: []model.Market{{Id: marketID, Name: "Match Odds"}},
 	}, nil)
 	dbConnection.EXPECT().CreateGame(gomock.Any(), model.Game{
 		GameID:      eventID,
 		EventID:     eventID,
 		MarketID:    marketID,
-		Description: description + " "}).Return(nil)
+		StartAt:     time.Date(2025, 4, 18, 14, 0, 0, 0, time.UTC),
+		Status:      "open",
+		HomeTeam:    "Team A",
+		AwayTeam:    "Team B",
+		Description: description}).Return(nil)
 
-	err = s.CreateEvent("123")
+	err = s.CreateEvent(eventID)
 	assert.NoError(t, err)
 }

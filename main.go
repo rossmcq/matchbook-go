@@ -9,14 +9,14 @@ import (
 	matchbook "github.com/rossmcq/matchbook-go/adapter"
 	"github.com/rossmcq/matchbook-go/application"
 	"github.com/rossmcq/matchbook-go/handler"
-	"github.com/rossmcq/matchbook-go/postgres"
 	"github.com/rossmcq/matchbook-go/service"
+	"github.com/rossmcq/matchbook-go/store"
 
 	_ "github.com/golang/mock/mockgen/model"
 )
 
 func main() {
-	dbConnection, err := postgres.New()
+	dbConnection, err := store.New()
 	if err != nil {
 		log.Fatalf("unable to create db connection: %e", err)
 	}

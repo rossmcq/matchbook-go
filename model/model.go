@@ -1,10 +1,16 @@
 package model
 
+import "time"
+
 type Game struct {
 	GameID      string
 	EventID     string
 	MarketID    int64
-	Description string
+	StartAt     time.Time `json:"start"`
+	Status      string    `json:"status"`
+	HomeTeam    string
+	AwayTeam    string
+	Description string `json:"name"`
 }
 
 type EventResponse struct {
