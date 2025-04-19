@@ -6,11 +6,11 @@ type Game struct {
 	GameID      string
 	EventID     string
 	MarketID    int64
-	StartAt     time.Time `json:"start"`
-	Status      string    `json:"status"`
+	StartAt     time.Time
+	Status      string
 	HomeTeam    string
 	AwayTeam    string
-	Description string `json:"name"`
+	Description string
 }
 
 type EventResponse struct {
