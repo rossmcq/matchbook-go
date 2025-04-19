@@ -1,9 +1,15 @@
 package model
 
+import "time"
+
 type Game struct {
 	GameID      string
 	EventID     string
 	MarketID    int64
+	StartAt     time.Time
+	Status      string
+	HomeTeam    string
+	AwayTeam    string
 	Description string
 }
 

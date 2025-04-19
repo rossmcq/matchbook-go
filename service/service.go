@@ -1,5 +1,5 @@
 //go:generate mockgen -destination=./mocks/mock_matchbook.go -package=mocks github.com/rossmcq/matchbook-go/service MatchbookClient
-//go:generate mockgen -destination=./mocks/mock_postgres.go -package=mocks github.com/rossmcq/matchbook-go/service DbConnection
+//go:generate mockgen -destination=./mocks/mock_postgres.go -package=mocks github.com/rossmcq/matchbook-go/service Store
 
 package service
 
@@ -7,13 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
+	"time"
 
 	"github.com/rossmcq/matchbook-go/model"
 )
 
 type Service struct {
 	MatchbookClient MatchbookClient
-	DbConnection    DbConnection
+	Store           Store
 }
 
 type MatchbookClient interface {
@@ -22,12 +25,12 @@ type MatchbookClient interface {
 	GetMatchbookToken() string
 }
 
-type DbConnection interface {
+type Store interface {
 	CreateGame(ctx context.Context, game model.Game) error
 	CheckConnection() error
 }
 
-func New(matchbookClient MatchbookClient, dbConnection DbConnection) (Service, error) {
+func New(matchbookClient MatchbookClient, dbConnection Store) (Service, error) {
 	if matchbookClient == nil {
 		return Service{}, errors.New("matchbook client is nil")
 	}
@@ -38,7 +41,7 @@ func New(matchbookClient MatchbookClient, dbConnection DbConnection) (Service, e
 
 	return Service{
 		MatchbookClient: matchbookClient,
-		DbConnection:    dbConnection,
+		Store:           dbConnection,
 	}, nil
 }
 
@@ -53,31 +56,39 @@ func (s Service) CreateEvent(id string) error {
 	if markets == nil {
 		return fmt.Errorf("no markets found for event %s", id)
 	}
-	marketID := int64(0)
-	var description string
-	for i := 0; i < len(markets); i++ {
-		market := markets[i]
+
+	var matchOddsMarket model.Market
+	for _, market := range markets {
 		if market.Name == "Match Odds" {
-			marketID = market.Id
-			// TODO split timestamp out from here
-			description = event.Name + " " + event.Start
+			matchOddsMarket = market
+			break
 		}
 	}
+	fmt.Printf("markets: %v \n", markets)
+	fmt.Printf("matchOddsMarket: %v \n", matchOddsMarket)
 
-	if marketID == 0 {
+	if matchOddsMarket.Id == 0 {
 		return errors.New("no match odds found")
+	}
+	gameStart, err := time.Parse(time.RFC3339, event.Start)
+	if err != nil {
+		return errors.Join(errors.New("error parsing time"), err)
 	}
 
 	game := model.Game{
 		GameID:      id,
 		EventID:     id,
-		MarketID:    marketID,
-		Description: description,
+		MarketID:    matchOddsMarket.Id,
+		StartAt:     gameStart,
+		Status:      event.Status,
+		HomeTeam:    strings.Split(event.Name, " vs ")[0],
+		AwayTeam:    strings.Split(event.Name, " vs ")[1],
+		Description: event.Name,
 	}
 
-	fmt.Printf("marketId: %v, description: %v \n", game.MarketID, game.Description)
+	log.Printf("marketId: %v, description: %v \n", game.MarketID, game.Description)
 
-	err = s.DbConnection.CreateGame(context.TODO(), game)
+	err = s.Store.CreateGame(context.TODO(), game)
 	if err != nil {
 		return errors.Join(errors.New("error inserting into postgres"), err)
 	}
@@ -90,12 +101,12 @@ func (s Service) LogoutMatchbook() error {
 		return errors.Join(errors.New("logout error"), err)
 	}
 
-	fmt.Printf("logged out of current session %v \n", response)
+	log.Printf("logged out of current session %v \n", response)
 	return nil
 }
 
 func (s Service) Health() error {
-	err := s.DbConnection.CheckConnection()
+	err := s.Store.CheckConnection()
 	if err != nil {
 		return errors.Join(errors.New("error connecting to db"), err)
 	}

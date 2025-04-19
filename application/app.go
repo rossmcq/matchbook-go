@@ -10,17 +10,17 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	matchbook "github.com/rossmcq/matchbook-go/adapter"
 	"github.com/rossmcq/matchbook-go/handler"
-	"github.com/rossmcq/matchbook-go/postgres"
+	"github.com/rossmcq/matchbook-go/store"
 )
 
 type App struct {
 	router          http.Handler
-	dbConnection    postgres.DbConnection
+	dbConnection    store.DbConnection
 	matchbookClient matchbook.Client
 	handler         handler.Handler
 }
 
-func New(dbConnection postgres.DbConnection, matchbookClient matchbook.Client, handler handler.Handler) (*App, error) {
+func New(dbConnection store.DbConnection, matchbookClient matchbook.Client, handler handler.Handler) (*App, error) {
 	app := &App{
 		matchbookClient: matchbookClient,
 		dbConnection:    dbConnection,
