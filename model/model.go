@@ -43,7 +43,7 @@ type MatchOdds struct {
 }
 
 type EventResponse struct {
-	Id               string   `json:"id"`
+	Id               int64    `json:"id"`
 	Name             string   `json:"name"`
 	SportId          int      `json:"sport-id"`
 	Start            string   `json:"start"`
