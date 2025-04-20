@@ -12,6 +12,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// DbConnection represents a connection to the PostgreSQL database
 type DbConnection struct {
 	Database *sql.DB
 }
@@ -41,11 +42,12 @@ func New() (DbConnection, error) {
 		dbCfg.password = password
 	}
 
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", dbCfg.host, dbCfg.port, dbCfg.user, dbCfg.password, dbCfg.dbname)
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		dbCfg.host, dbCfg.port, dbCfg.user, dbCfg.password, dbCfg.dbname)
 
 	dbConnection, err := sql.Open("postgres", psqlconn)
 	if err != nil {
-		return DbConnection{}, fmt.Errorf("can't open DB: %v", err)
+		return DbConnection{}, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
 	return DbConnection{
@@ -53,49 +55,56 @@ func New() (DbConnection, error) {
 	}, nil
 }
 
+// CheckConnection verifies that the database connection is alive and working
 func (d DbConnection) CheckConnection() error {
-	// check db
-	err := d.Database.Ping()
-
-	if err != nil {
-		return fmt.Errorf("error with db.Ping: %v", err)
+	if err := d.Database.Ping(); err != nil {
+		return fmt.Errorf("database ping failed: %w", err)
 	}
 
-	log.Println("DB Connected!")
-
+	log.Println("Database connection verified")
 	return nil
 }
 
-func (d DbConnection) CreateGame(ctx context.Context, game model.Game) error {
+func (d DbConnection) SelectGame(ctx context.Context, game model.Game) (string, error) {
 	var gameID string
 
 	selectStmt := `SELECT id FROM football.games 
 					WHERE event_id = $1 
 					AND market_id = $2;`
-
-	row := d.Database.QueryRow(selectStmt, game.EventID, game.MarketID)
+	row := d.Database.QueryRowContext(ctx, selectStmt, game.EventID, game.MarketID)
 
 	err := row.Scan(&gameID)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			return fmt.Errorf("error scanning gameID: %s", err)
+			return "", fmt.Errorf("failed to scan game ID: %w", err)
 		}
 	}
-	fmt.Printf("returned GameID from db: %v: \n", gameID)
-	if gameID != "" {
-		fmt.Printf("gameID!=nilish: \n")
 
+	return gameID, nil
+}
+
+// CreateGame creates a new game in the database if it doesn't already exist
+func (d DbConnection) CreateGame(ctx context.Context, game model.Game) error {
+	gameID, err := d.SelectGame(ctx, game)
+	if err != nil {
+		return fmt.Errorf("failed to select game: %w", err)
+	}
+	if gameID != "" {
+		log.Printf("Game already exists with ID: %s", gameID)
 		return nil
 	}
 
 	insertDynStmt := `INSERT INTO football.games (id, event_id, market_id, start_at, status, home_team, away_team, description)
 						VALUES ($1,$2,$3,$4,$5,$6,$7,$8);`
-	_, err = d.Database.Exec(insertDynStmt, game.GameID, game.EventID, game.MarketID, game.StartAt, game.Status, game.HomeTeam, game.AwayTeam, game.Description)
+
+	_, err = d.Database.ExecContext(ctx, insertDynStmt,
+		game.GameID, game.EventID, game.MarketID, game.StartAt,
+		game.Status, game.HomeTeam, game.AwayTeam, game.Description)
+
 	if err != nil {
-		return fmt.Errorf("error inserting row to football.games: %v", err)
+		return fmt.Errorf("failed to insert game: %w", err)
 	}
 
-	log.Printf("game inserted: %v \n", gameID)
-
+	log.Printf("Successfully created game with ID: %s", game.GameID)
 	return nil
 }
