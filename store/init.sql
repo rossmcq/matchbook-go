@@ -26,10 +26,10 @@ CREATE TABLE football.match_odds (
 	draw_back_amount NUMERIC ( 16 ) NOT NULL,
 	draw_lay_odds NUMERIC ( 8 ) NOT NULL,
 	draw_lay_amount NUMERIC ( 16 ) NOT NULL,
-	away_back_win_odds NUMERIC ( 8 ) NOT NULL,
-	away_back_win_amount NUMERIC ( 16 ) NOT NULL,
-	away_lay_win_odds NUMERIC ( 8 ) NOT NULL,
-	away_lay_win_amount NUMERIC ( 16 ) NOT NULL,
+	away_win_back_odds NUMERIC ( 8 ) NOT NULL,
+	away_win_back_amount NUMERIC ( 16 ) NOT NULL,
+	away_win_lay_odds NUMERIC ( 8 ) NOT NULL,
+	away_win_lay_amount NUMERIC ( 16 ) NOT NULL,
 	home_win_back_odds_second NUMERIC ( 8 ) NOT NULL,
 	home_win_back_amount_second NUMERIC ( 16 ) NOT NULL,
 	home_win_lay_odds_second NUMERIC ( 8 ) NOT NULL,
@@ -38,9 +38,9 @@ CREATE TABLE football.match_odds (
 	draw_back_amount_second NUMERIC ( 16 ) NOT NULL,
 	draw_lay_odds_second NUMERIC ( 8 ) NOT NULL,
 	draw_lay_amount_second NUMERIC ( 16 ) NOT NULL,
-	away_back_win_odds_second NUMERIC ( 8 ) NOT NULL,
-	away_back_win_amount_second NUMERIC ( 16 ) NOT NULL,
-	away_lay_win_odds_second NUMERIC ( 8 ) NOT NULL,
-	away_lay_win_amount_second NUMERIC ( 16 ) NOT NULL ) ;
+	away_win_back_odds_second NUMERIC ( 8 ) NOT NULL,
+	away_win_back_amount_second NUMERIC ( 16 ) NOT NULL,
+	away_win_lay_odds_second NUMERIC ( 8 ) NOT NULL,
+	away_win_lay_amount_second NUMERIC ( 16 ) NOT NULL ) ;
 
 GRANT ALL ON TABLE football.match_odds  TO matchbook_user;

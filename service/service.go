@@ -23,12 +23,14 @@ type MatchbookClient interface {
 	GetEvent(eventId string) (model.EventResponse, error)
 	LogoutMatchbook() (string, error)
 	GetMatchbookToken() string
+	GetMarket(ctx context.Context, eventId string, marketId int64) (model.MarketResponse, error)
 }
 
 type Store interface {
 	CreateGame(ctx context.Context, game model.Game) error
 	CheckConnection() error
 	GetOpenGames(ctx context.Context) ([]model.Game, error)
+	InsertMatchOdds(ctx context.Context, matchOdds model.MatchOdds) error
 }
 
 func New(matchbookClient MatchbookClient, dbConnection Store) (Service, error) {
@@ -102,7 +104,17 @@ func (s Service) RecordMatchOdds(ctx context.Context) (any, error) {
 		return nil, errors.Join(errors.New("error getting open games"), err)
 	}
 
-	log.Printf("games: %v", games)
+	for _, game := range games {
+		Market, err := s.MatchbookClient.GetMarket(ctx, game.EventID, game.MarketID)
+		if err != nil {
+			return nil, errors.Join(errors.New("error getting market"), err)
+		}
+		matchOdds := marketResponseToMatchOdds(game, Market)
+		err = s.Store.InsertMatchOdds(ctx, matchOdds)
+		if err != nil {
+			return nil, errors.Join(errors.New("error inserting match odds"), err)
+		}
+	}
 
 	return "", nil
 
@@ -128,4 +140,20 @@ func (s Service) Health() error {
 
 func (s Service) GetMatchbookToken() string {
 	return s.MatchbookClient.GetMatchbookToken()
+}
+
+func marketResponseToMatchOdds(game model.Game, marketResponse model.MarketResponse) model.MatchOdds {
+	matchOdds := model.MatchOdds{}
+
+	log.Printf("marketResponse: %v", marketResponse)
+
+	// for _, runner := range marketResponse.Runners {
+	// 	runnerIsHome := runner.Name == game.HomeTeam
+	// 	bestBackOdds := 0.0
+	// 	for _, price := range runner.Prices {
+	// 		matchOdds.HomeWinBackOdds = price.Odds
+	// 	}
+	// }
+
+	return matchOdds
 }

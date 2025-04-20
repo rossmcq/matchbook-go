@@ -77,3 +77,17 @@ func (mr *MockStoreMockRecorder) GetOpenGames(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenGames", reflect.TypeOf((*MockStore)(nil).GetOpenGames), arg0)
 }
+
+// InsertMatchOdds mocks base method.
+func (m *MockStore) InsertMatchOdds(arg0 context.Context, arg1 model.MatchOdds) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertMatchOdds", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertMatchOdds indicates an expected call of InsertMatchOdds.
+func (mr *MockStoreMockRecorder) InsertMatchOdds(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMatchOdds", reflect.TypeOf((*MockStore)(nil).InsertMatchOdds), arg0, arg1)
+}
