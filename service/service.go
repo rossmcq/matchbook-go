@@ -28,6 +28,7 @@ type MatchbookClient interface {
 type Store interface {
 	CreateGame(ctx context.Context, game model.Game) error
 	CheckConnection() error
+	GetOpenGames(ctx context.Context) ([]model.Game, error)
 }
 
 func New(matchbookClient MatchbookClient, dbConnection Store) (Service, error) {
@@ -45,7 +46,7 @@ func New(matchbookClient MatchbookClient, dbConnection Store) (Service, error) {
 	}, nil
 }
 
-func (s Service) CreateEvent(id string) error {
+func (s Service) CreateEvent(ctx context.Context, id string) error {
 	event, err := s.MatchbookClient.GetEvent(id)
 	if err != nil {
 		return errors.New("error getting market id")
@@ -64,12 +65,11 @@ func (s Service) CreateEvent(id string) error {
 			break
 		}
 	}
-	fmt.Printf("markets: %v \n", markets)
-	fmt.Printf("matchOddsMarket: %v \n", matchOddsMarket)
 
 	if matchOddsMarket.Id == 0 {
 		return errors.New("no match odds found")
 	}
+
 	gameStart, err := time.Parse(time.RFC3339, event.Start)
 	if err != nil {
 		return errors.Join(errors.New("error parsing time"), err)
@@ -88,11 +88,24 @@ func (s Service) CreateEvent(id string) error {
 
 	log.Printf("marketId: %v, description: %v \n", game.MarketID, game.Description)
 
-	err = s.Store.CreateGame(context.TODO(), game)
+	err = s.Store.CreateGame(ctx, game)
 	if err != nil {
 		return errors.Join(errors.New("error inserting into postgres"), err)
 	}
 	return nil
+}
+
+func (s Service) RecordMatchOdds(ctx context.Context) (any, error) {
+	log.Printf("recording match odds for game...")
+	games, err := s.Store.GetOpenGames(ctx)
+	if err != nil {
+		return nil, errors.Join(errors.New("error getting open games"), err)
+	}
+
+	log.Printf("games: %v", games)
+
+	return "", nil
+
 }
 
 func (s Service) LogoutMatchbook() error {

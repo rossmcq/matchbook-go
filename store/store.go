@@ -83,6 +83,28 @@ func (d DbConnection) SelectGame(ctx context.Context, game model.Game) (string, 
 	return gameID, nil
 }
 
+func (d DbConnection) GetOpenGames(ctx context.Context) ([]model.Game, error) {
+	var games []model.Game
+
+	selectStmt := `SELECT id, event_id, market_id, start_at, status, home_team, away_team, description 
+					FROM football.games WHERE status = 'open';`
+	rows, err := d.Database.QueryContext(ctx, selectStmt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query open games: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var game model.Game
+		if err := rows.Scan(&game.GameID, &game.EventID, &game.MarketID, &game.StartAt, &game.Status, &game.HomeTeam, &game.AwayTeam, &game.Description); err != nil {
+			return nil, fmt.Errorf("failed to scan game: %w", err)
+		}
+		games = append(games, game)
+	}
+
+	return games, nil
+}
+
 // CreateGame creates a new game in the database if it doesn't already exist
 func (d DbConnection) CreateGame(ctx context.Context, game model.Game) error {
 	gameID, err := d.SelectGame(ctx, game)
