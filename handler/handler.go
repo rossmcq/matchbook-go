@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 
 	chi "github.com/go-chi/chi/v5"
@@ -32,32 +32,33 @@ func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var err error
 	h.service.MatchbookClient, err = matchbook.New()
 	if err != nil {
-		fmt.Printf("Error loading token %v \n", err)
+		log.Printf("failed loading token %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	fmt.Printf("Got session token %v \n", h.service.GetMatchbookToken())
+	log.Printf("got session token %v \n", h.service.GetMatchbookToken())
 }
 
 func (h Handler) GetToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Current session token %v \n", h.service.GetMatchbookToken())
+	log.Printf("Current session token %v \n", h.service.GetMatchbookToken())
 }
 
 func (h Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	err := h.service.LogoutMatchbook()
 	if err != nil {
-		fmt.Printf("logout error: %s", err)
+		log.Printf("logout error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
 func (h Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	idParam := chi.URLParam(r, "id")
 
-	fmt.Printf("handle_request: create event data for id: %v \n", idParam)
+	log.Printf("handle_request: create event data for id: %v \n", idParam)
 
-	err := h.service.CreateEvent(idParam)
+	err := h.service.CreateEvent(ctx, idParam)
 	if err != nil {
-		fmt.Printf("error creating event: %v \n", err)
+		log.Printf("failed creating event: %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -65,7 +66,7 @@ func (h Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 func (s *Handler) Health(w http.ResponseWriter, r *http.Request) {
 	err := s.service.Health()
 	if err != nil {
-		fmt.Printf("Error connecting to DB: %v \n", err)
+		log.Printf("failed to connect to DB: %v \n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -12,13 +13,19 @@ import (
 	mock_service "github.com/rossmcq/matchbook-go/service/mocks"
 )
 
+var (
+	eventID     = "123"
+	marketID    = int64(55)
+	description = "Team A vs Team B"
+)
+
 func TestService_New_Success(t *testing.T) {
 	t.Log("TestService_Success")
 
 	gomockCtrl := gomock.NewController(t)
 
 	matchbookClient := mock_service.NewMockMatchbookClient(gomockCtrl)
-	dbConnection := mock_service.NewMockDbConnection(gomockCtrl)
+	dbConnection := mock_service.NewMockStore(gomockCtrl)
 
 	s, err := service.New(matchbookClient, dbConnection)
 	assert.NotNil(t, s)
@@ -31,7 +38,7 @@ func TestService_New_Failure(t *testing.T) {
 	gomockCtrl := gomock.NewController(t)
 
 	matchbookClient := mock_service.NewMockMatchbookClient(gomockCtrl)
-	dbConnection := mock_service.NewMockDbConnection(gomockCtrl)
+	dbConnection := mock_service.NewMockStore(gomockCtrl)
 
 	_, err := service.New(nil, dbConnection)
 	assert.EqualError(t, err, "matchbook client is nil")
@@ -43,14 +50,10 @@ func TestService_New_Failure(t *testing.T) {
 func TestService_CreateEvent_Sucess(t *testing.T) {
 	t.Log("TestService_CreateEvent_Success")
 
-	eventID := "123"
-	marketID := int64(55)
-	description := "Team A vs Team B"
-
 	gomockCtrl := gomock.NewController(t)
 
 	matchbookClient := mock_service.NewMockMatchbookClient(gomockCtrl)
-	dbConnection := mock_service.NewMockDbConnection(gomockCtrl)
+	dbConnection := mock_service.NewMockStore(gomockCtrl)
 
 	s, err := service.New(matchbookClient, dbConnection)
 	assert.NotNil(t, s)
@@ -72,6 +75,26 @@ func TestService_CreateEvent_Sucess(t *testing.T) {
 		AwayTeam:    "Team B",
 		Description: description}).Return(nil)
 
-	err = s.CreateEvent(eventID)
+	err = s.CreateEvent(context.Background(), eventID)
+	assert.NoError(t, err)
+}
+
+func TestService_RecordMatchOdds_Sucess(t *testing.T) {
+	t.Log("TestService_RecordMatchOdds_Success")
+
+	gomockCtrl := gomock.NewController(t)
+
+	matchbookClient := mock_service.NewMockMatchbookClient(gomockCtrl)
+	dbConnection := mock_service.NewMockStore(gomockCtrl)
+
+	s, err := service.New(matchbookClient, dbConnection)
+	assert.NotNil(t, s)
+	assert.NoError(t, err)
+
+	dbConnection.EXPECT().GetOpenGames(gomock.Any()).Return([]model.Game{{
+		GameID: eventID,
+	}}, nil)
+
+	_, err = s.RecordMatchOdds(context.Background())
 	assert.NoError(t, err)
 }
