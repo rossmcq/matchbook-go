@@ -1,6 +1,7 @@
 package matchbook
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -93,6 +94,29 @@ func (c Client) GetEvent(eventId string) (model.EventResponse, error) {
 	}
 
 	return eventResponse, nil
+}
+
+func (c Client) GetMarket(ctx context.Context, eventId string, marketId int64) (model.MarketResponse, error) {
+	getMarketURL := fmt.Sprintf("https://api.matchbook.com/edge/rest/events/%s/markets/%d", eventId, marketId)
+	req, _ := http.NewRequestWithContext(ctx, "GET", getMarketURL, nil)
+
+	addHeaders(req)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return model.MarketResponse{}, fmt.Errorf("failed making http request: %w", err)
+	}
+
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+
+	var marketResponse model.MarketResponse
+	err = json.Unmarshal(body, &marketResponse)
+	if err != nil {
+		return marketResponse, fmt.Errorf("unable to unmarshal: %v", err)
+	}
+
+	return marketResponse, nil
 }
 
 func addHeaders(req *http.Request) {

@@ -130,3 +130,8 @@ func (d DbConnection) CreateGame(ctx context.Context, game model.Game) error {
 	log.Printf("Successfully created game with ID: %s", game.GameID)
 	return nil
 }
+
+func (d DbConnection) InsertMatchOdds(ctx context.Context, matchOdds model.MatchOdds) error {
+	log.Printf("Inserting match odds for game: %s", matchOdds.GameID)
+	return nil
+}

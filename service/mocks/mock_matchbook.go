@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -47,6 +48,21 @@ func (m *MockMatchbookClient) GetEvent(arg0 string) (model.EventResponse, error)
 func (mr *MockMatchbookClientMockRecorder) GetEvent(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockMatchbookClient)(nil).GetEvent), arg0)
+}
+
+// GetMarket mocks base method.
+func (m *MockMatchbookClient) GetMarket(arg0 context.Context, arg1 string, arg2 int64) (model.MarketResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMarket", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.MarketResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMarket indicates an expected call of GetMarket.
+func (mr *MockMatchbookClientMockRecorder) GetMarket(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMarket", reflect.TypeOf((*MockMatchbookClient)(nil).GetMarket), arg0, arg1, arg2)
 }
 
 // GetMatchbookToken mocks base method.
